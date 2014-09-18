@@ -1,0 +1,9 @@
+keyspace: cass_loader_test
+    - table: users
+        id: uuid
+        first_name: text
+        last_name: text
+        date_added: timestamp
+        login_count: int
+        percent_success: double
+        total_owed: decimal
