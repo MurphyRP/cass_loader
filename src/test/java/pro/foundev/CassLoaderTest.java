@@ -20,6 +20,7 @@ import com.datastax.driver.core.Session;
 import org.junit.Test;
 
 import java.io.File;
+import java.net.URL;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -49,10 +50,13 @@ public class CassLoaderTest {
                 session.execute("DROP TABLE IF EXISTS cass_loader_test.users");
                 session.execute("CREATE TABLE IF NOT EXISTS cass_loader_test.users "+
                 "(id uuid, first_name text, last_name text, date_added timestamp, login_count int, "+
-                "percent_success double, total_owned decimal, primary key(id))");
+                "percent_success double," +
+                        " total_owned decimal, " +
+                        "primary key(id))");
             }
         } finally {
             lock.unlock();
+            //need to move locking out for general reuse
         }
         return session;
     }
@@ -63,12 +67,12 @@ public class CassLoaderTest {
 
     @Test
     public void itParsesXmlFileWithOneTableAndLoadsToCassandra() {
-        File loaderFile = new File(String.valueOf(getClass().getResource("cassandra_load.yaml")));
+        String loaderFile = getClass().getResource("/cassandra_load.yaml").getFile();
         int numberOfRows = 100;
-        CassLoader loader = new CassLoader(loaderFile, numberOfRows);
+        CassLoader loader = new CassLoader(getOrCreateSession(), new File(loaderFile), numberOfRows);
         long rowCountBefore = rowCountFor("users");
         loader.run();
         long rowCountAfter = rowCountFor("users");
-        assertThat(rowCountBefore+numberOfRows, is(equalTo(rowCountAfter)));
+        assertThat(rowCountBefore + numberOfRows, is(equalTo(rowCountAfter)));
     }
 }
